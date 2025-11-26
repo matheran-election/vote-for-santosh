@@ -11,6 +11,40 @@
   const panel = document.getElementById("evm-panel");
   const ledColumn = document.getElementById("led-column");
   const resetBtn = document.getElementById("reset-btn");
+  const STORAGE_KEY = "vfsVotes";
+  const DEFAULT_VOTES = { total: 0, candidates: {}, candidateNames: {} };
+
+  function getStoredVotes() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return JSON.parse(JSON.stringify(DEFAULT_VOTES));
+      const parsed = JSON.parse(raw);
+      return {
+        total: parsed.total || 0,
+        candidates: parsed.candidates || {},
+        candidateNames: parsed.candidateNames || {},
+      };
+    } catch (err) {
+      console.warn("Unable to read stored votes:", err);
+      return JSON.parse(JSON.stringify(DEFAULT_VOTES));
+    }
+  }
+
+  function persistVotes(votes) {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(votes));
+    } catch (err) {
+      console.error("Unable to save votes locally:", err);
+    }
+  }
+
+  function recordVote(candidate) {
+    const votes = getStoredVotes();
+    votes.total = (votes.total || 0) + 1;
+    votes.candidates[candidate.id] = (votes.candidates[candidate.id] || 0) + 1;
+    votes.candidateNames[candidate.id] = candidate.name;
+    persistVotes(votes);
+  }
 
   // Build label slots, LEDs and buttons to align like the machine image
   const labelHtml = [];
@@ -128,19 +162,7 @@
       try { navigator.vibrate(60); } catch (_) { /* ignore */ }
     }
 
-    // Send vote to server
-    try {
-      await fetch('/api/vote', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          candidateId: candidate.id,
-          candidateName: candidate.name
-        })
-      });
-    } catch (err) {
-      console.error('Failed to record vote:', err);
-    }
+    recordVote(candidate);
 
     await beep();
 

@@ -157,7 +157,34 @@
     </div>
 
     <script>
-        async function loadStats() {
+        const STORAGE_KEY = 'vfsVotes';
+        const DEFAULT_VOTES = { total: 0, candidates: {}, candidateNames: {} };
+
+        function getVotes() {
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY);
+                if (!raw) return JSON.parse(JSON.stringify(DEFAULT_VOTES));
+                const parsed = JSON.parse(raw);
+                return {
+                    total: parsed.total || 0,
+                    candidates: parsed.candidates || {},
+                    candidateNames: parsed.candidateNames || {}
+                };
+            } catch (err) {
+                console.warn('Unable to read votes from storage:', err);
+                return JSON.parse(JSON.stringify(DEFAULT_VOTES));
+            }
+        }
+
+        function setVotes(votes) {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(votes));
+            } catch (err) {
+                console.error('Unable to write votes to storage:', err);
+            }
+        }
+
+        function loadStats() {
             const container = document.getElementById('stats-container');
             const errorContainer = document.getElementById('error-container');
             const lastUpdated = document.getElementById('last-updated');
@@ -166,10 +193,7 @@
             container.innerHTML = '<div class="loading">Loading statistics...</div>';
             
             try {
-                const response = await fetch('/api/stats');
-                if (!response.ok) throw new Error('Failed to fetch stats');
-                
-                const data = await response.json();
+                const data = getVotes();
                 
                 // Build HTML
                 let html = '<div class="stats-grid">';
@@ -221,7 +245,7 @@
             }
         }
         
-        async function resetVotes() {
+        function resetVotes() {
             const confirmed = confirm('Are you sure you want to reset all vote counts? This action cannot be undone.');
             if (!confirmed) return;
             
@@ -229,19 +253,9 @@
             errorContainer.innerHTML = '';
             
             try {
-                const response = await fetch('/api/reset', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' }
-                });
-                
-                if (!response.ok) throw new Error('Failed to reset votes');
-                
-                const data = await response.json();
-                errorContainer.innerHTML = `<div style="background: #c6f6d5; color: #22543d; padding: 15px; border-radius: 8px; margin-bottom: 20px;">✓ ${data.message || 'Vote counts reset successfully'}</div>`;
-                
-                // Reload stats after reset
+                setVotes(JSON.parse(JSON.stringify(DEFAULT_VOTES)));
+                errorContainer.innerHTML = `<div style="background: #c6f6d5; color: #22543d; padding: 15px; border-radius: 8px; margin-bottom: 20px;">✓ Vote counts reset successfully</div>`;
                 loadStats();
-                
             } catch (error) {
                 errorContainer.innerHTML = `<div class="error">Error resetting votes: ${error.message}</div>`;
             }
@@ -250,8 +264,13 @@
         // Load stats on page load
         loadStats();
         
-        // Auto-refresh every 5 seconds
+        // Auto-refresh every 5 seconds & react to storage events
         setInterval(loadStats, 5000);
+        window.addEventListener('storage', (event) => {
+            if (!event.key || event.key === STORAGE_KEY) {
+                loadStats();
+            }
+        });
     </script>
 </body>
 </html>

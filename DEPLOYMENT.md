@@ -1,139 +1,61 @@
-# Deployment Guide - VoteForSantosh.com
+# Deployment Guide - VoteForSantosh.com (Static)
 
-## Quick Start Options
-
-### Option 1: Render (Recommended for Beginners)
-
-1. **Sign up** at https://render.com (free with GitHub/GitLab/Google)
-
-2. **Create a new Web Service:**
-   - Connect your GitHub repository (or create one first)
-   - Select your repository
-   - Build Command: `npm install`
-   - Start Command: `npm start`
-   - Environment: `Node`
-   - Plan: `Free`
-
-3. **Deploy!** Render will automatically:
-   - Install dependencies
-   - Run your server
-   - Provide a free HTTPS URL (e.g., `your-app.onrender.com`)
-
-**Note:** Free tier sleeps after 15 min inactivity. First request after sleep takes ~30 seconds.
+The project no longer relies on Node.js or server-side storage. All vote data is persisted in the visitor's browser via `localStorage`, so the entire site can be hosted as static files.
 
 ---
 
-### Option 2: Railway (Fast & Reliable)
+## Recommended Free Hosting Options
 
-1. **Sign up** at https://railway.app (free with GitHub)
+### 1. GitHub Pages
+1. Initialize git and push this folder to a GitHub repository.
+2. In the repository settings, enable **Pages** → **Deploy from branch** → choose `main` and `/root`.
+3. GitHub provides a public URL such as `https://username.github.io/VoteForSantosh.com/`.
 
-2. **New Project → Deploy from GitHub:**
-   - Select your repository
-   - Railway auto-detects Node.js
-   - Deploys automatically
+### 2. Netlify
+1. Sign up at https://www.netlify.com (free tier).
+2. Click **Add new site → Deploy manually** or **Import from Git**.
+3. Drag-and-drop the project folder or select your GitHub repo.
+4. Netlify assigns a free HTTPS domain (custom domain support included).
 
-3. **Get your URL** from the service dashboard
+### 3. Vercel
+1. Sign up at https://vercel.com (free tier).
+2. **Add New Project → Import Git Repository**.
+3. No build command needed; select the root directory and deploy.
+4. Vercel provides a `*.vercel.app` URL with HTTPS.
 
-**Note:** Free tier gives $5 credit/month (usually enough for small apps)
-
----
-
-### Option 3: Fly.io (Best Performance)
-
-1. **Install Fly CLI:**
-   ```bash
-   # Windows (PowerShell)
-   iwr https://fly.io/install.ps1 -useb | iex
-   ```
-
-2. **Login:**
-   ```bash
-   fly auth login
-   ```
-
-3. **Initialize:**
-   ```bash
-   fly launch
-   ```
-   - Follow prompts
-   - Creates `fly.toml` config
-
-4. **Deploy:**
-   ```bash
-   fly deploy
-   ```
+Any static hosting provider (Cloudflare Pages, Surge, Render Static Sites, etc.) will work because there is no server process.
 
 ---
 
-## Important Notes
+## Local Preview
 
-### File Persistence
-- **Render**: Persistent disk storage (votes.json will persist)
-- **Railway**: Ephemeral storage (may lose data on restart)
-- **Fly.io**: Requires volumes for persistence
+Since there is no Node dependency, you can open `index.html` directly in a browser. For accurate `localStorage` isolation between pages, use a lightweight static server:
 
-### Environment Variables
-Your app uses `process.env.PORT` which is automatically set by all platforms.
+```powershell
+# Option A: Python 3
+python -m http.server 3000
 
-### Required Files
-- ✅ `package.json` (already exists)
-- ✅ `server.js` (already exists)
-- ✅ `.gitignore` (just created)
+# Option B: VS Code Live Server extension
+```
 
-### Before Deploying
-
-1. **Initialize Git** (if not done):
-   ```bash
-   git init
-   git add .
-   git commit -m "Initial commit"
-   ```
-
-2. **Push to GitHub:**
-   ```bash
-   git remote add origin <your-repo-url>
-   git push -u origin main
-   ```
-
-3. **Deploy** using one of the platforms above
+Then visit `http://localhost:3000/` for the voting UI and `http://localhost:3000/admini.html` for the admin dashboard.
 
 ---
 
-## Testing After Deployment
+## Limitations Without a Backend
 
-1. **Voting Page:** `https://your-app-url.com/`
-2. **Admin Page:** `https://your-app-url.com/admini.html`
-3. **API Stats:** `https://your-app-url.com/api/stats`
-
----
-
-## Troubleshooting
-
-### App sleeps (Render free tier)
-- First request after sleep takes ~30 seconds
-- Consider upgrading to paid plan for always-on
-
-### Votes not persisting
-- Check if platform supports persistent storage
-- Consider using a database (MongoDB Atlas free tier) for production
-
-### Port binding errors
-- Your code already uses `process.env.PORT` ✅
-- Most platforms handle this automatically
+- Vote counts live in each visitor's browser only. Different devices or browsers will not share totals.
+- Clearing browser data (cache/storage) resets the counts.
+- For centralized, tamper-resistant totals you will eventually need a backend service or hosted database.
 
 ---
 
-## Recommended: Render for First Deployment
+## Deployment Checklist
 
-**Why Render?**
-- Easiest setup (just connect GitHub)
-- Persistent disk storage (votes.json survives restarts)
-- Free HTTPS certificate
-- Good documentation
+1. Remove old Node-specific files if they still exist (`server.js`, `package*.json`, `votes.json`, `node_modules/`).
+2. Commit the current static assets (`index.html`, `admini.html`, `script.js`, `styles.css`, `Lotus.png`, `.gitignore`, `DEPLOYMENT.md`).
+3. Push to your Git hosting provider.
+4. Deploy using one of the static hosting options above.
 
-**Steps:**
-1. Push code to GitHub
-2. Sign up at render.com
-3. New Web Service → Connect GitHub
-4. Deploy!
+Once deployed, share the generated public URL (e.g., `https://voteforsantosh.netlify.app`) with voters and admins. The admin dashboard remains accessible at `/admini.html` on the same domain.
 
