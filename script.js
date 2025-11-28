@@ -142,6 +142,25 @@
     });
   }
 
+  function showMessage(text) {
+    const messageEl = document.getElementById('vote-message');
+    if (!messageEl) return;
+    
+    messageEl.textContent = text;
+    messageEl.style.display = 'block';
+    
+    // Reset animation by removing and re-adding the element
+    messageEl.style.animation = 'none';
+    setTimeout(() => {
+      messageEl.style.animation = 'fadeInOut 3s ease-in-out';
+    }, 10);
+    
+    // Hide after animation
+    setTimeout(() => {
+      messageEl.style.display = 'none';
+    }, 3000);
+  }
+
   async function onVote(buttonEl) {
     if (busy) return;
     busy = true;
@@ -163,6 +182,11 @@
     }
 
     recordVote(candidate);
+
+    // Show special message for Santosh Shelar (c3)
+    if (candidate.id === 'c3') {
+      showMessage('श्री. संतोष अरविंद शेलार यांना भरघोस मतांनी निवडून द्या');
+    }
 
     await beep();
 
